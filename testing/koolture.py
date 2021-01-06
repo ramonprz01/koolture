@@ -74,21 +74,21 @@ def show_topics(vectorizer, lda_model, n_words=15):
     return topic_keywords
 
 
-def get_models(topics, tf, tup_num):
-    """
-    This functions takes in the number of topics to run the model for,
-    a tuple with the name of the company and the sparse matix and
-    a number for the element in the tuple that has the sparse matix.
-    It then returns a tuple with (company name, topic #, comph, and the model)
+# def get_models(topics, tf, tup_num):
+#     """
+#     This functions takes in the number of topics to run the model for,
+#     a tuple with the name of the company and the sparse matix and
+#     a number for the element in the tuple that has the sparse matix.
+#     It then returns a tuple with (company name, topic #, comph, and the model)
     
-    'Online' learning method is faster than 'batch' (offline) but has lower accuracy. Keep trade-off in mind. See link below: 
+#     'Online' learning method is faster than 'batch' (offline) but has lower accuracy. Keep trade-off in mind. See link below: 
     
-    https://datascience.stackexchange.com/questions/45464/online-vs-batch-learning-in-latent-dirichlet-allocation-using-scikit-learn 
-    """
-    lda = LatentDirichletAllocation(n_components=topics, max_iter=100, learning_method='online', learning_offset=10., random_state=1234)
-    lda_model = lda.fit(tf[tup_num])
-    topicsOverWords = lda_model.components_ / lda_model.components_.sum(axis=1)[:, np.newaxis]
-    return (tf[0], topics, comph(topicsOverWords), lda_model)
+#     https://datascience.stackexchange.com/questions/45464/online-vs-batch-learning-in-latent-dirichlet-allocation-using-scikit-learn 
+#     """
+#     lda = LatentDirichletAllocation(n_components=topics, max_iter=100, learning_method='online', learning_offset=10., random_state=1234)
+#     lda_model = lda.fit(tf[tup_num])
+#     topicsOverWords = lda_model.components_ / lda_model.components_.sum(axis=1)[:, np.newaxis]
+#     return (tf[0], topics, comph(topicsOverWords), lda_model)
 
 
 def jsd(p, q, base=np.e): # JS distance between probability vectors, used to compute compH
@@ -269,15 +269,16 @@ def get_best_topics(model_func, sorted_tuple):
     return output_dictionary
 
 
-def absolute_topics(data, company_col, measure_col, topics_col, model_col, vrizers_list):
+def absolute_topics(data, company_col, measure_col, topics_col, coh_col, model_col, vrizers_list):
     best_topics_model = defaultdict(tuple) # the output goes here
 
     for vrizer in vrizers_list:
         cond = data[company_col] == vrizer[0] # get each company
         filtered_data = data[cond] # to get a single dataframe
         the_topic = int(filtered_data.loc[filtered_data[measure_col].idxmax(), topics_col]) # get the best topic based on max coherence
+        the_coherence = filtered_data.loc[filtered_data[measure_col].idxmax(), coh_col]
         the_model = filtered_data.loc[filtered_data[measure_col].idxmax(), model_col] # get the best model based on max coherence
-        best_topics_model[vrizer[0]] = (the_topic, the_model)
+        best_topics_model[vrizer[0]] = (the_topic, the_coherence, the_model)
         
     return best_topics_model
 

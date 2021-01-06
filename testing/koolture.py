@@ -29,7 +29,7 @@ def comp_name_out(data, col_to_search, col_reviews, companies):
 
 
 
-def normalize_doc(doc):
+def normalize_doc(doc, stopwords=None):
     """
     This function normalizes your list of documents by taking only
     words, numbers, and spaces in between them. It then filters out
@@ -39,8 +39,10 @@ def normalize_doc(doc):
     doc = doc.lower()
     doc = doc.strip()
     tokens = nltk.word_tokenize(doc)
-#     filtered_tokens = [token for token in tokens]
-    filtered_tokens = [token for token in tokens if token not in nltk.corpus.stopwords.words('english')]
+    if stopwords:
+        filtered_tokens = [token for token in tokens if token not in stopwords]
+    else:
+        filtered_tokens = [token for token in tokens]
     doc = ' '.join(filtered_tokens)
     return doc
 

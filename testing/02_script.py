@@ -10,6 +10,7 @@ import nltk, re, math, csv
 # nlkt.download('punkt')
 
 import koolture as kt
+import time
 
 from string import punctuation
 from functools import partial
@@ -20,8 +21,9 @@ from collections import defaultdict
 
 # Load your dataset.
 def main():
+    
+    
     df = pd.read_csv('../data/clean_gs.csv')
-
 
     # ## Fist Range of Topics
 
@@ -31,7 +33,7 @@ def main():
     # Remove the company names from the reviews, and extract the reviews into a numpy array.
 
     comps_of_interest = df.employer.value_counts()
-    comps_of_interest = (comps_of_interest[(comps_of_interest == 48)]).index
+    comps_of_interest = (comps_of_interest[(comps_of_interest > 2)]).index
     cond2 = df['employer'].isin(comps_of_interest) # create the condition
     df_interest = df[cond2].copy() # get the new dataset
     unique_ids = df_interest['employer'].unique() # get the unique IDs or unique employers in the dataset
@@ -56,19 +58,24 @@ def main():
         data_pros_cleaned = e.map(normalize_doc, data_pros)
         data_pros_cleaned = list(e.map(kt.root_of_word, data_pros_cleaned))
 
-
     df_interest['pros_clean'] = data_pros_cleaned
 
 
-    # ## Create Vectorizers Tuple
+    ## Create Vectorizers Tuple
 
-    vectorizers_dicts = kt.get_vectorizers(data=df_interest, unique_ids=unique_ids, company_col='employer', reviews_col='pros', vrizer=CountVectorizer())
+    vectorizers_dicts = kt.get_vectorizers(data=df_interest,
+                                           unique_ids=unique_ids,
+                                           company_col='employer',
+                                           reviews_col='pros',
+                                           vrizer=CountVectorizer())
 
 
     # The following block run the models in parallel over the companies available and using the specifiedamount of topics in our_range variable and return a dictionary with the output of the get_models function for each company. It is used to identify the interval to search further for optimal topic number.
 
 
-    partial_func = partial(kt.get_models, topics=our_range, vrizer_dicts=vectorizers_dicts, unique_ids=unique_ids)
+    partial_func = partial(kt.get_models, topics=our_range,
+                           vrizer_dicts=vectorizers_dicts,
+                           unique_ids=unique_ids)
 
     with cf.ProcessPoolExecutor() as e:
         output = list(e.map(partial_func, unique_ids))
@@ -135,14 +142,15 @@ def main():
     cultureMetrics = comph_df.merge(conth_df, how = 'inner', right_on = 0, left_on = 0)
     cultureMetrics = cultureMetrics.merge(crossEnt_df, how = 'inner', right_on = 0, left_on = 0)
     cultureMetrics.columns = ['employerID', 'comph', 'conth', 'avgCrossEnt']
-    cultureMetrics.head()
 
 
     df_best_topics = pd.DataFrame.from_records(best_topics).T.reset_index()
     df_best_topics.columns = ['company', 'best_topic', 'model']
-    df_best_topics.head()
 
     cultureMetrics.to_csv('CultureMetrics_TestSample_1000.csv', index=False)
     (df_best_topics.merge(reviews_nums, on='company', how='right')
                    .to_csv('best_topics.csv', index=False))
 
+
+if __name__ == '__main__':
+    main()

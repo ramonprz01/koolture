@@ -269,16 +269,16 @@ def get_best_topics(model_func, sorted_tuple):
     return output_dictionary
 
 
-def absolute_topics(data, company_col, measure_col, topics_col, coh_col, model_col, vrizers_list):
+def absolute_topics(data, company_col, measure_col, topics_col, model_col, vrizers_list):
     best_topics_model = defaultdict(tuple) # the output goes here
 
     for vrizer in vrizers_list:
         cond = data[company_col] == vrizer[0] # get each company
         filtered_data = data[cond] # to get a single dataframe
         the_topic = int(filtered_data.loc[filtered_data[measure_col].idxmax(), topics_col]) # get the best topic based on max coherence
-        the_coherence = filtered_data.loc[filtered_data[measure_col].idxmax(), coh_col]
+        the_coherence = filtered_data.loc[filtered_data[measure_col].idxmax(), measure_col]
         the_model = filtered_data.loc[filtered_data[measure_col].idxmax(), model_col] # get the best model based on max coherence
-        best_topics_model[vrizer[0]] = (the_topic, the_coherence, the_model)
+        best_topics_model[vrizer[0]] = (the_topic, the_model, the_coherence)
         
     return best_topics_model
 
